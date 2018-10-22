@@ -16,6 +16,16 @@ var ArticleSchema = new Schema({
     type: String,
     required: true
   },
+
+  // 'image is a type of String 
+  image: {
+    type: String,
+    required: true
+  },
+  synopsis: {
+    type: String,
+    required: true
+  },
   // `note` is an object that stores a Note id
   // The ref property links the ObjectId to the Note model
   // This allows us to populate the Article with an associated Note
@@ -25,8 +35,11 @@ var ArticleSchema = new Schema({
   }
 });
 
+
+
 // This creates our model from the above schema, using mongoose's model method
 var Article = mongoose.model("Article", ArticleSchema);
+console.log("This is from the article page" + "/n" + Article.fields);
 
 // Export the Article model
 module.exports = Article;

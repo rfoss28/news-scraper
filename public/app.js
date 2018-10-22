@@ -1,11 +1,27 @@
-// Grab the articles as a json
-$.getJSON("/articles", function(data) {
-  // For each one
-  for (var i = 0; i < data.length; i++) {
-    // Display the apropos information on the page
-    $("#articles").append("<p data-id='" + data[i]._id + "'>" + data[i].title + "<br />" + data[i].link + "</p>");
-  }
+$.ajax({
+  url:"/scrape",
+  type: "GET"
+}).done(function(res) {
+
+
+
+  // Grab the articles as a json
+  $.getJSON("/articles", function(data) {
+    // For each one
+   
+    for (var i = 0; i < data.length; i++) {
+      // Display the apropos information on the page
+      $("#articles").append("<p data-id='" + data[i]._id + "'>" + "<img src=' + data[i].image +'>" + data[i].title + "<br />" + data[i].link + "</p>");
+    }
+  });
+
+
+
 });
+
+$(document).on("click", "buttonSelector", function() {
+  //run the delete article stuff
+})
 
 
 // Whenever someone clicks a p tag
