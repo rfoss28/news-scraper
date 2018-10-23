@@ -50,16 +50,13 @@ app.get("/scrape", function(req, res) {
     $(".c-entry-box--compact__title a").each(function(i, element) {
       // Save an empty result object
       var result = {};
-
       // Add the text and href of every link, and save them as properties of the result object
-      if($(this).find(this).text().length > 0) {
+      
         
-        result.title = $(this)
-        .find(".c-entry-box--compact__title a")
+        result.title = $(this).children(".c-entry-box--compact__title a")
+        .find('a')
         .text();
-      } else {
-        result.title = "No Title";
-      }
+    
     
     
       if($(this).find(".synopsis").text().length > 0) {
