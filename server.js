@@ -42,43 +42,49 @@ mongoose.connect(MONGODB_URI);
 // A GET route for scraping
 app.get("/scrape", function(req, res) {
   // First, we grab the body of the html with request
-  axios.get("https://www.theverge.com/tech").then(function(response) {
+  axios.get("https://www.gamespot.com/news/").then(function(response) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(response.data);
 
     // Now, we grab every a tag within the listing result, and do the following:
-    $(".c-entry-box--compact__title a").each(function(i, element) {
+    $(".media-article a").each(function(i, element) {
+      // console.log($('.media-article').text())
       // Save an empty result object
       var result = {};
       // Add the text and href of every link, and save them as properties of the result object
       
         
-        result.title = $(this).children(".c-entry-box--compact__title a")
-        .find('a')
+      if($(this).find(".media-title").text().length > 0) {
+        
+        result.title = $(this)
+        .find(".media-title")
         .text();
+      } else {
+        result.title = "No Title";
+      }
     
     
     
-      if($(this).find(".synopsis").text().length > 0) {
+      if($(this).find(".media-deck").text().length > 0) {
         result.synopsis = $(this) 
-        .find(".synopsis")
+        .find(".media-deck")
         .text();
       } else {
         result.synopsis = "no synopsis"
       }
       
-      if($(this).find("figure").attr("data-original") === undefined) {
+      if($(this).find("img").attr("src") === undefined) {
         result.image = "No image"
       } else {
         result.image = $(this)
-        .find("figure")
-        .attr("data-original");
+        .find("img")
+        .attr("src");
         
         
       }
     
       if($(this).attr("href").length > 0) {
-        result.link = $(this)
+        result.link ="https://www.gamespot.com" + $(this)
         .attr("href");
       } else {
         result.link = "no link";
