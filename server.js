@@ -28,6 +28,12 @@ var app = express();
 app.use(logger("dev"));
 // Use body-parser for handling form submissions
 app.use(bodyParser.urlencoded({ extended: true }));
+
+
+//setting up handlebars
+app.engine("handlebars", exphbs({ defaultLayout: "main" }));
+app.set("view engine", "handlebars");
+
 // Use express.static to serve the public folder as a static directory
 app.use(express.static("public"));
 
@@ -36,9 +42,7 @@ app.use(express.static("public"));
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://root:root@192.168.99.100/mongoHeadlines?authSource=admin";
 
 
-//setting up handlebars
-app.engine("handlebars", exphbs({ defaultLayout: "main" }));
-app.set("view engine", "handlebars");
+
 
 // Set mongoose to leverage built in JavaScript ES6 Promises
 // Connect to the Mongo DB
@@ -48,20 +52,6 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 
 // Routes
 
-app.get("/", function(req, res) {
-  // Grab every doc in the Articles array
-  Article.find({}, function(error, doc) {
-    // Log any errors
-    if (error) {
-      console.log(error);
-    }
-    // Or send the doc to the browser as a json object
-    else {
-      //res.json(doc);
-      res.render("index", {articles: doc});
-    }
-  });
-});
 
 
 // A GET route for scraping
@@ -129,30 +119,26 @@ app.get("/scrape", function(req, res) {
     //res.send("Scrape Complete");
  
 });
-res.redirect("/");
+res.redirect("/articles");
 });
 
 // Route for getting all Articles from the db
 app.get("/articles", function(req, res) {
   // Grab every document in the Articles collection
   db.Article.find({})
-    .then(function (dbArticle) {
-      // Send to client
-      res.json(dbArticle);
-    })
-    .catch(function (err) {
-      // Send error to client if err
-      res.json(err);
+  .populate("notes","body").exec(function(err,doc)
+    {
+      if (err) {
+        res.send(err);
+      }
+      else {
+        res.render("articles", {articles: doc});
+      }
+      });
     });
-});
-
-
 // Route for grabbing a specific Article by id, populate it with it's note
 app.get("/articles/:id", function(req, res) { 
-  var hbsObj = {
-    article: [],
-    body: []
-  };
+
   // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
   db.Article.findOne({ _id: req.params.id })
     // ..and populate all of the notes associated with it
@@ -173,7 +159,7 @@ app.get("/articles/:id", function(req, res) {
           $('article').each(function (i, element) {
             hbsObj.body = $(this).children('.messageText').text();
             // Send article body and comments to article.handlbars through hbObj
-            res.render('article', hbsObj);
+            res.render("articles", hbsObj);
             // Prevents loop through so it doesn't return an empty hbsObj.body
             return false;
 
