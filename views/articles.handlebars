@@ -1,0 +1,59 @@
+<div class="container-fluid">
+
+<div class="row">
+      
+  <div class="col-lg-12">
+
+    <h2>I'm just an app, scraping articles from the web for yoooooou......</h2>
+
+  </div>
+</div>
+  
+<!--
+loop through database items and display the article titles and links
+ -->
+
+<div class="row">
+      
+  <div class="col-lg-12">
+
+    {{#each articles}}
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h3 class="panel-title">{{title}}</h3>
+          </div>
+        <div class="panel-body">
+          <h5><a href="https://www.bustle.com{{link}}">Read article</a></h5>
+                 
+          <h5 class="text-success">Comments:</h5>
+                  
+<!--loop through comments and display each one-->
+            {{#each comment}}
+              <p> {{body}} 
+             
+
+<!--input for deleting a comment-->
+              <form action="/delete/{{id}}" method="POST">
+
+                <button name="deleteComment" type="submit" class="btn btn-warning disabled">Delete Comment</button>
+              </form>
+              </p>
+              <br />
+            {{/each}}
+            
+                  
+<!--input for adding a comment-->
+            <form action="/submit/{{id}}" method="POST">
+                    
+              <textarea name="body" placeholder="Add a new comment"></textarea>
+              <br />
+              <button name="addComment" type="submit" class="btn btn-success">Submit</button>
+            </form>
+        </div>
+      </div>
+          
+            {{/each}}
+
+</div>
+</div>
+</div>

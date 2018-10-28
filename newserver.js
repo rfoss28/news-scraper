@@ -2,12 +2,7 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var logger = require("morgan");
 var mongoose = require("mongoose");
-var exphbs = require("express-handlebars");
-var request= require ("request");
 
-// Requiring our Note and Article models
-var Note = require("./models/Note.js");
-var Article = require("./models/Article.js");
 // Our scraping tools
 // Axios is a promised-based http library, similar to jQuery's Ajax method
 // It works on the client and on the server
@@ -36,40 +31,20 @@ app.use(express.static("public"));
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://root:root@192.168.99.100/mongoHeadlines?authSource=admin";
 
 
-//setting up handlebars
-app.engine("handlebars", exphbs({ defaultLayout: "main" }));
-app.set("view engine", "handlebars");
-
 // Set mongoose to leverage built in JavaScript ES6 Promises
 // Connect to the Mongo DB
 mongoose.Promise = Promise;
-mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
+mongoose.connect(MONGODB_URI);
 
 
 // Routes
 
-app.get("/", function(req, res) {
-  // Grab every doc in the Articles array
-  Article.find({}, function(error, doc) {
-    // Log any errors
-    if (error) {
-      console.log(error);
-    }
-    // Or send the doc to the browser as a json object
-    else {
-      //res.json(doc);
-      res.render("index", {articles: doc});
-    }
-  });
-});
-
-
 // A GET route for scraping
 app.get("/scrape", function(req, res) {
   // First, we grab the body of the html with request
-  request("https://www.gamespot.com/news/",function(error, response, url) {
+  axios.get("https://www.gamespot.com/news/").then(function(response) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
-    var $ = cheerio.load(url);
+    var $ = cheerio.load(response.data);
 
     // Now, we grab every a tag within the listing result, and do the following:
     $(".media-article a").each(function(i, element) {
@@ -87,7 +62,7 @@ app.get("/scrape", function(req, res) {
       }
     
     
-      if($(this).find(".media-deck").text().length > 0) {
+      if($(this).find("..media-deck").text().length > 0) {
         result.synopsis = $(this) 
         .find(".media-deck")
         .text();
@@ -95,7 +70,7 @@ app.get("/scrape", function(req, res) {
         result.synopsis = "no synopsis"
       }
       
-      if($(this).find("img").attr("src") === undefined) {
+      if($(this).find("img").attr("data-src") === undefined) {
         result.image = "No image"
       } else {
         result.image = $(this)
@@ -127,70 +102,39 @@ app.get("/scrape", function(req, res) {
 
     // If we were able to successfully scrape and save an Article, send a message to the client
     //res.send("Scrape Complete");
- 
-});
-res.redirect("/");
+  });
 });
 
 // Route for getting all Articles from the db
 app.get("/articles", function(req, res) {
   // Grab every document in the Articles collection
   db.Article.find({})
-    .then(function (dbArticle) {
-      // Send to client
+    .then(function(dbArticle) {
+      // If we were able to successfully find Articles, send them back to the client
       res.json(dbArticle);
     })
-    .catch(function (err) {
-      // Send error to client if err
+    .catch(function(err) {
+      // If an error occurred, send it to the client
       res.json(err);
     });
 });
 
-
 // Route for grabbing a specific Article by id, populate it with it's note
-app.get("/articles/:id", function(req, res) { 
-  var hbsObj = {
-    article: [],
-    body: []
-  };
+app.get("/articles/:id", function(req, res) {
   // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
   db.Article.findOne({ _id: req.params.id })
     // ..and populate all of the notes associated with it
-
     .populate("note")
-    .exec(function (err, doc) {
-      if (err) {
-        console.log('Error: ' + err);
-      } else {
-        hbsObj.article = doc;
-        var link = "https://www.gamespot.com" + doc.link;
-        // console.log("this is the link", link);
-
-        request(link, function (error, response, html) {
-          var $ = cheerio.load(html)
-          // console.log("this is the html", html);
-
-          $('article').each(function (i, element) {
-            hbsObj.body = $(this).children('.messageText').text();
-            // Send article body and comments to article.handlbars through hbObj
-            res.render('article', hbsObj);
-            // Prevents loop through so it doesn't return an empty hbsObj.body
-            return false;
-
-    // .then(function(dbArticle) {
-    //   // If we were able to successfully find an Article with the given id, send it back to the client
-    //   res.json(dbArticle);
-    // })
-    // .catch(function(err) {
-    //   // If an error occurred, send it to the client
-    //   res.json(err);
-          });
+    .then(function(dbArticle) {
+      // If we were able to successfully find an Article with the given id, send it back to the client
+      res.json(dbArticle);
+    })
+    .catch(function(err) {
+      // If an error occurred, send it to the client
+      res.json(err);
     });
-  }
-  });
 });
-    
-    
+
 // Route for saving/updating an Article's associated Note
 app.post("/articles/:id", function(req, res) {
   // Create a new note and pass the req.body to the entry
