@@ -39,7 +39,7 @@ app.use(express.static("public"));
 
 // Connect to the Mongo DB
 // mongoose.connect("mongodb://192.168.99.100");
-var MONGODB_URI = process.env.MONGODB_URI || "mongodb://root:root@192.168.99.100/mongoHeadlines?authSource=admin";
+var MONGODB_URI = process.env.MONGOLAB_COPPER_URI || "mongodb://root:root@192.168.99.100/mongoHeadlines?authSource=admin";
 
 
 
@@ -55,7 +55,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 
 
 // A GET route for scraping
-app.get("/scrape", function(req, res) {
+app.get("/", function(req, res) {
   // First, we grab the body of the html with request
   request("https://www.gamespot.com/news/",function(error, response, url) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
